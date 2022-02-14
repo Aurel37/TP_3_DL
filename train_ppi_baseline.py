@@ -56,7 +56,8 @@ class GraphModel(nn.Module):
       outputs = F.elu(outputs)
       outputs = self.layers[2](self.g, outputs)
       outputs = outputs.mean(axis = 1)
-      return nn.Sigmoid()(outputs)
+      #return nn.Sigmoid()(outputs)
+      return outputs
 
 
 def main(args):
@@ -77,7 +78,7 @@ def main(args):
 
     ###################################################################################################
 
-    loss_fcn = nn.CrossEntropyLoss()
+    loss_fcn = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = 0.005)
 
     # train
