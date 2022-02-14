@@ -37,6 +37,28 @@ class BasicGraphModel(nn.Module):
 
         return outputs
 
+class GraphModel(nn.Module):
+  
+  def __init__(self, g, input_size, hidden_size, output_size):
+      super().__init__()
+
+      self.g = g
+      self.layers = nn.ModuleList()
+      self.layers.append(GATConv(input_size, hidden_size, 4))
+      self.layers.append(GATConv(4*hidden_size, hidden_size, 4, residual = True))
+      self.layers.append(GATConv(4*hidden_size, output_size, 6))
+      
+  def forward(self, inputs):
+      outputs = inputs
+      outputs = self.layers[0](self.g, outputs)
+      outputs = F.elu(outputs.flatten(start_dim = 1))
+      outputs = self.layers[1](self.g, outputs).flatten(start_dim = 1)
+      outputs = F.elu(outputs)
+      outputs = self.layers[2](self.g, outputs)
+      outputs = outputs.mean(axis = 1)
+      return nn.Sigmoid()(outputs)
+
+
 def main(args):
 
     # load dataset and create dataloader
@@ -50,13 +72,13 @@ def main(args):
 
     ########### Replace this model with your own GNN implemented class ################################
 
-    model = BasicGraphModel(g=train_dataset.graph, n_layers=2, input_size=n_features,
-                            hidden_size=256, output_size=n_classes, nonlinearity=F.elu).to(device)
+    model = GraphModel(g=train_dataset.graph, input_size=n_features,
+                            hidden_size=256, output_size=n_classes).to(device)
 
     ###################################################################################################
 
-    loss_fcn = nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters())
+    loss_fcn = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr = 0.005)
 
     # train
     if args.mode == "train":
