@@ -56,7 +56,6 @@ class GraphModel(nn.Module):
       outputs = F.elu(outputs)
       outputs = self.layers[2](self.g, outputs)
       outputs = outputs.mean(axis = 1)
-      #return nn.Sigmoid()(outputs)
       return outputs
 
 
